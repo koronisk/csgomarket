@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "ru.let.csgomarket"
-version = "1.0-SNAPSHOT"
+version = project.findProperty("libraryVersion")!!
 
 repositories {
     mavenCentral()
