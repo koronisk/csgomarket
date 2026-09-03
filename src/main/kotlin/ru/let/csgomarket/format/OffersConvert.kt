@@ -4,6 +4,7 @@ import ru.let.csgomarket.pricelist.FloatingPrice
 import ru.let.csgomarket.pricelist.PriceList
 import ru.let.csgomarket.response.AllOffersFullResponse
 import ru.let.csgomarket.response.BestOffersResponse
+import kotlin.math.roundToInt
 
 internal fun BestOffersResponse.priceList(): PriceList<Double> {
     val prices = items.associate { it.marketHashName to it.price }
@@ -34,9 +35,9 @@ internal fun AllOffersFullResponse.priceList(): PriceList<FloatingPrice> {
         val averagePrice = cleanPrices.map { it.price!!.toInt() }.average()
         
         val price = FloatingPrice(
-            lowestPrice = lowestPrice,
-            averagePrice = averagePrice,
-            highestPrice = highestPrice
+            lowestPrice = ((lowestPrice * 100.0).roundToInt() / 100.0) / 100,
+            averagePrice = ((averagePrice * 100.0).roundToInt() / 100.0) / 100,
+            highestPrice = ((highestPrice * 100.0).roundToInt() / 100.0) / 100
         )
         
         prices[hashName] = price

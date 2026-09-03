@@ -5,6 +5,7 @@ import ru.let.csgomarket.format.priceList
 import ru.let.csgomarket.pricelist.FloatingPrice
 import ru.let.csgomarket.pricelist.PriceList
 import ru.let.csgomarket.request.allOffersFull
+import ru.let.csgomarket.request.allOffersMock
 import ru.let.csgomarket.request.bestOffers
 
 class Market(
@@ -17,6 +18,8 @@ class Market(
 
     suspend fun fetchBestPrices(currency: Currency): PriceList<Double> =
         client.bestOffers(currency).priceList()
+    
+    suspend fun mockPrices(): PriceList<FloatingPrice> = client.allOffersMock()
 
     fun close() {
         client.close()
