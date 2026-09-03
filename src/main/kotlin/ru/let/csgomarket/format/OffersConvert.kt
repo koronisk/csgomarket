@@ -6,6 +6,9 @@ import ru.let.csgomarket.response.AllOffersFullResponse
 import ru.let.csgomarket.response.BestOffersResponse
 import kotlin.math.roundToInt
 
+/** A price above anchor * OUTLIER_MULTIPLIER is treated as an inflated/junk listing. */
+private const val OUTLIER_MULTIPLIER = 3.0
+
 internal fun BestOffersResponse.priceList(): PriceList<Double> {
     val prices = items.associate { it.marketHashName to it.price }
     return PriceList(prices)
@@ -18,30 +21,39 @@ internal fun AllOffersFullResponse.priceList(): PriceList<FloatingPrice> {
         .groupBy { it.marketHashName!! }
 
     grouped.forEach { (hashName, group) ->
-        val sorted = group.sortedBy { it.price }
-        if (sorted.isEmpty()) return@forEach
+        val sortedPrices = group.map { it.price!! }.sorted()
+        if (sortedPrices.isEmpty()) return@forEach
 
-        val lowestPrice = sorted.first().price!!
-        val highestPrice = sorted.last().price!!
+        val lowestPrice = sortedPrices.first()
+        val highestPrice = sortedPrices.last()
 
-        val q1 = sorted[(sorted.size * 0.25).toInt()].price!!
-        val q3 = sorted[(sorted.size * 0.75).toInt()].price!!
-        val iqr = q3 - q1
+        val median = sortedPrices.median()
+        val withoutLowOutlier = if (sortedPrices.size >= 3 && lowestPrice * OUTLIER_MULTIPLIER < median) {
+            sortedPrices.drop(1)
+        } else {
+            sortedPrices
+        }
 
-        val lowerBound = q1 - 1.5 * iqr
-        val upperBound = q3 + 1.5 * iqr
+        val anchor = withoutLowOutlier.first()
+        val cleanPrices = withoutLowOutlier
+            .filter { it <= anchor * OUTLIER_MULTIPLIER }
+            .ifEmpty { withoutLowOutlier }
 
-        val cleanPrices = sorted.filter { it.price!! in lowerBound..upperBound }
-        val averagePrice = cleanPrices.map { it.price!!.toInt() }.average()
-        
+        val averagePrice = cleanPrices.average()
+
         val price = FloatingPrice(
             lowestPrice = ((lowestPrice * 100.0).roundToInt() / 100.0) / 100,
             averagePrice = ((averagePrice * 100.0).roundToInt() / 100.0) / 100,
             highestPrice = ((highestPrice * 100.0).roundToInt() / 100.0) / 100
         )
-        
+
         prices[hashName] = price
     }
-    
+
     return PriceList(prices)
+}
+
+private fun List<Double>.median(): Double {
+    val mid = size / 2
+    return if (size % 2 == 0) (this[mid - 1] + this[mid]) / 2.0 else this[mid]
 }
