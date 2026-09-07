@@ -5,6 +5,7 @@ import ru.let.csgomarket.pricelist.PriceList
 import ru.let.csgomarket.response.AllOffersFullResponse
 import ru.let.csgomarket.response.BestOffersResponse
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 /** A price above anchor * OUTLIER_MULTIPLIER is treated as an inflated/junk listing. */
 private const val OUTLIER_MULTIPLIER = 3.0
@@ -42,9 +43,9 @@ internal fun AllOffersFullResponse.priceList(): PriceList<FloatingPrice> {
         val averagePrice = cleanPrices.average()
 
         val price = FloatingPrice(
-            lowestPrice = ((lowestPrice * 100.0).roundToInt() / 100.0) / 100,
-            averagePrice = ((averagePrice * 100.0).roundToInt() / 100.0) / 100,
-            highestPrice = ((highestPrice * 100.0).roundToInt() / 100.0) / 100
+            lowestPrice = ((lowestPrice * 100.0).roundToLong() / 100.0) / 100,
+            averagePrice = ((averagePrice * 100.0).roundToLong() / 100.0) / 100,
+            highestPrice = ((highestPrice * 100.0).roundToLong() / 100.0) / 100
         )
 
         prices[hashName] = price
